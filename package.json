@@ -1,6 +1,7 @@
 {
   "name": "kayra-email-api",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,6 +11,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "nodemailer": "^7.0.10"
+    "dotenv": "^17.2.3",
+    "nodemailer": "^7.0.10",
+    "sib-api-v3-sdk": "^8.5.0"
   }
 }

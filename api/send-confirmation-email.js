@@ -1,40 +1,19 @@
-import nodemailer from "nodemailer";
+import SibApiV3Sdk from "sib-api-v3-sdk";
+import 'dotenv/config';
+
 
 export default async function handler(req, res) {
-    const allowedOrigins = [
-    "https://kayra-two.vercel.app", // your main frontend
-    "https://kayra-admin.vercel.app", // another frontend (if any)
-    "http://localhost:3000", // local testing
-  ];
-
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  // 🟡 Handle OPTIONS preflight
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   const { customer, orderId, items, total, paymentMethod } = req.body;
 
-  // Set up Brevo SMTP transporter
-  const transporter = nodemailer.createTransport({
-    host: "smtp-relay.brevo.com",
-    port: 587,
-    auth: {
-      user: process.env.BREVO_USER,
-      pass: process.env.BREVO_PASS,
-    },
-  });
+  const client = SibApiV3Sdk.ApiClient.instance;
+  const apiKey = client.authentications["api-key"];
+  apiKey.apiKey = process.env.BREVO_API_KEY;
+
+  const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
   const itemsHtml = items
     .map(
@@ -59,17 +38,18 @@ export default async function handler(req, res) {
     <p>Thanks for shopping with Kayra 💛</p>
   `;
 
-  try {
-    await transporter.sendMail({
-      from: "Kayra <contact@kayrainternational.com>",
-      to: customer.email,
-      subject: `Order Confirmation #${orderId}`,
-      html: htmlContent,
-    });
+  const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
+  sendSmtpEmail.sender = { name: "Kayra", email: "contact@kayrainternational.com" };
+  sendSmtpEmail.to = [{ email: customer.email, name: customer.name }];
+  sendSmtpEmail.subject = `Order Confirmation #${orderId}`;
+  sendSmtpEmail.htmlContent = htmlContent;
 
+  try {
+    const data = await apiInstance.sendTransacEmail(sendSmtpEmail);
+    console.log("Email sent successfully:", data);
     res.json({ success: true });
-  } catch (err) {
-    console.error("Email error:", err);
+  } catch (error) {
+    console.error("Brevo API error:", error);
     res.status(500).json({ error: "Failed to send email" });
   }
 }
