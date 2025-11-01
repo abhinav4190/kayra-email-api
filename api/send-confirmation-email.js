@@ -1,6 +1,25 @@
 import nodemailer from "nodemailer";
 
 export default async function handler(req, res) {
+    const allowedOrigins = [
+    "https://kayra-two.vercel.app", // your main frontend
+    "https://kayra-admin.vercel.app", // another frontend (if any)
+    "http://localhost:3000", // local testing
+  ];
+
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // 🟡 Handle OPTIONS preflight
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
