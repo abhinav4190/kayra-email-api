@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   // ✅ Add allowed origins
   const allowedOrigins = [
     "https://kayra-two.vercel.app",  // main site
-    "https://kayrainternational.com/", 
+    "https://kayrainternational.com", 
     "http://localhost:3000",         // local dev
   ];
 
