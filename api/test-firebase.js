@@ -3,42 +3,51 @@
 const admin = require('firebase-admin');
 
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader('Access-Control-Allow-Origin', '*');
   
-  if (req.method === "OPTIONS") {
+  if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   try {
-    // Try to initialize Firebase
+    // Initialize if not already done
     if (!admin.apps.length) {
+      let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+      
+      if (privateKey && privateKey.includes('\\n')) {
+        privateKey = privateKey.replace(/\\n/g, '\n');
+      }
+
       admin.initializeApp({
         credential: admin.credential.cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
           clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+          privateKey: privateKey,
         }),
       });
     }
 
     const db = admin.firestore();
     
-    // Try a simple query
-    const testQuery = await db.collection('orders').limit(1).get();
+    // Try to query orders collection
+    const ordersRef = db.collection('orders');
+    const snapshot = await ordersRef.limit(1).get();
     
     return res.status(200).json({
       success: true,
-      message: "Firebase Admin works!",
-      docsFound: testQuery.size,
-      adminInitialized: admin.apps.length > 0
+      message: 'Firebase Admin initialized and working!',
+      ordersCollectionExists: !snapshot.empty,
+      documentCount: snapshot.size,
+      firebaseInitialized: admin.apps.length > 0,
     });
     
   } catch (error) {
-    console.error("Firebase error:", error);
+    console.error('Firebase test error:', error);
     return res.status(500).json({
       success: false,
       error: error.message,
-      stack: error.stack
+      errorName: error.name,
+      stack: error.stack,
     });
   }
 }
