@@ -1,6 +1,7 @@
 const allowedOrigins = [
   "https://kayra-two.vercel.app",
   "https://kayrainternational.com",
+  "https://www.kayrainternational.com", // Added with www in case
   "http://localhost:3000",
 ];
 
@@ -8,22 +9,26 @@ const { adminDb } = require('../../lib/firebase-admin'); // Adjust path as neede
 
 export default async function handler(req, res) {
   const origin = req.headers.origin;
+  console.log(`Received origin: ${origin}`); // Debug log
   if (allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
+  } else {
+    console.log(`Origin not allowed: ${origin}`); // Debug log
   }
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  if (req.method !== "GET") {
+  if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { orderId, merchantOrderId, token } = req.query;
+    const { orderId, merchantOrderId, token } = req.body;
+    console.log(`Received body: ${JSON.stringify(req.body)}`); // Debug log
 
     if (!merchantOrderId) {
       return res.status(400).json({
@@ -59,6 +64,8 @@ export default async function handler(req, res) {
         },
       }
     );
+
+    console.log(`PhonePe status: ${response.status}`); // Debug log
 
     const data = await response.json();
 
