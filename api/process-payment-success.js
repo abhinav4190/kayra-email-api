@@ -1,6 +1,6 @@
 // api/process-payment-success.js
 
-const admin = require('firebase-admin');
+import admin from 'firebase-admin';
 
 // Initialize Firebase Admin (with proper error handling)
 function initializeFirebase() {
