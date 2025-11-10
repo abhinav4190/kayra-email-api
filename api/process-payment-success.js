@@ -3,6 +3,7 @@
 const allowedOrigins = [
   "https://kayra-two.vercel.app",
   "https://kayrainternational.com",
+  "https://www.kayrainternational.com", // Added with www
   "http://localhost:3000",
 ];
 
@@ -10,13 +11,24 @@ const { adminDb } = require('../lib/firebase-admin'); // Adjust path
 
 export default async function handler(req, res) {
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
+  console.log(`Received request method: ${req.method}, Origin: ${origin || 'none'}`); // Debug log
+
+  // Temporarily allow all origins for testing (comment out after confirming)
+  res.setHeader("Access-Control-Allow-Origin", "*");
+
+  // Production version (uncomment after test):
+  // if (allowedOrigins.includes(origin)) {
+  //   res.setHeader("Access-Control-Allow-Origin", origin);
+  // } else {
+  //   console.log(`Origin not allowed: ${origin}`); // Debug if mismatch
+  //   return res.status(403).json({ error: "Origin not allowed" });
+  // }
+
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
+    console.log("Handled OPTIONS preflight"); // Debug log
     return res.status(200).end();
   }
 
@@ -26,6 +38,7 @@ export default async function handler(req, res) {
 
   try {
     const { orderId, merchantOrderId, transactionId } = req.body;
+    console.log(`Received body: ${JSON.stringify(req.body)}`); // Debug log
 
     if (!orderId || !merchantOrderId) {
       return res.status(400).json({
