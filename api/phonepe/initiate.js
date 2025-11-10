@@ -21,14 +21,14 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { orderId, amount, customerName, customerPhone, customerEmail, token } = req.body;
+   const { orderId, amount, customerName, customerPhone, customerEmail, token, tokenType } = req.body; // Add tokenType if returning it
 
-    if (!token) {
-      return res.status(400).json({
-        success: false,
-        message: "OAuth token is required",
-      });
-    }
+   if (!token) {
+  return res.status(400).json({
+    success: false,
+    message: "OAuth token is required",
+  });
+}
 
     const MERCHANT_ID = process.env.PHONEPE_MERCHANT_ID;
     const PHONEPE_API_URL = process.env.PHONEPE_API_URL;
@@ -53,15 +53,14 @@ export default async function handler(req, res) {
 
     // Call PhonePe payment API with OAuth token
 const response = await fetch(`${PHONEPE_API_URL}/checkout/v2/pay`, {
-
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-        "X-MERCHANT-ID": MERCHANT_ID,
-      },
-      body: JSON.stringify(payload),
-    });
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `O-Bearer ${token}`, // Or `${tokenType || "O-Bearer"} ${token}` if dynamic
+    "X-MERCHANT-ID": MERCHANT_ID,
+  },
+  body: JSON.stringify(payload),
+});
 
     const data = await response.json();
 

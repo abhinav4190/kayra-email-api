@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     const CLIENT_ID = process.env.PHONEPE_CLIENT_ID;
     const CLIENT_SECRET = process.env.PHONEPE_CLIENT_SECRET;
     const PHONEPE_API_URL = process.env.PHONEPE_AUTH_URL;
-
+const CLIENT_VERSION = process.env.PHONEPE_CLIENT_VERSION;
     // Debug: Log environment variables (remove in production!)
     console.log("=== PhonePe Token Request Debug ===");
     console.log("CLIENT_ID:", CLIENT_ID ? "✓ Set" : "✗ Missing");
@@ -48,9 +48,10 @@ const tokenUrl = `${PHONEPE_API_URL}/v1/oauth/token`;
 
     console.log("Token URL:", tokenUrl);
 
- const requestBody = new URLSearchParams({
+const requestBody = new URLSearchParams({
   grant_type: "client_credentials",
   client_id: CLIENT_ID,
+  client_version: CLIENT_VERSION || "1", // Fallback to "1" if not set
   client_secret: CLIENT_SECRET,
 });
 
@@ -73,12 +74,12 @@ const tokenResponse = await fetch(tokenUrl, {
 const tokenData = await tokenResponse.json();
 console.log("PhonePe response:", JSON.stringify(tokenData, null, 2));
 
-    if (tokenData.access_token) {
+if (tokenData.access_token) {
   console.log("✓ Token obtained successfully");
   return res.json({
     success: true,
     token: tokenData.access_token,
-    tokenType: tokenData.token_type,
+    tokenType: tokenData.token_type || "O-Bearer", // Fallback if not returned
     expiresIn: tokenData.expires_in || 3600,
   });
 } else {
