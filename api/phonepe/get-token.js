@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   try {
     const CLIENT_ID = process.env.PHONEPE_CLIENT_ID;
     const CLIENT_SECRET = process.env.PHONEPE_CLIENT_SECRET;
-    const PHONEPE_API_URL = process.env.PHONEPE_API_URL;
+    const PHONEPE_API_URL = process.env.PHONEPE_AUTH_URL;
 
     // Debug: Log environment variables (remove in production!)
     console.log("=== PhonePe Token Request Debug ===");
