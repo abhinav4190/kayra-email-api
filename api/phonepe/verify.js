@@ -41,18 +41,18 @@ export default async function handler(req, res) {
     const PHONEPE_API_URL = process.env.PHONEPE_API_URL;
 
     // Check payment status with PhonePe
-    const response = await fetch(
-     `${PHONEPE_API_URL}/checkout/v2/status/${MERCHANT_ID}/${merchantTransactionId}`,
+const response = await fetch(
+  `${PHONEPE_API_URL}/checkout/v2/status/${MERCHANT_ID}/${merchantTransactionId}`,
+  {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+      "X-MERCHANT-ID": MERCHANT_ID,
+    },
+  }
+);
 
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "X-MERCHANT-ID": MERCHANT_ID,
-        },
-      }
-    );
 
     const data = await response.json();
 
