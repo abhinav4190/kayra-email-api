@@ -56,7 +56,7 @@ const response = await fetch(`${PHONEPE_API_URL}/checkout/v2/pay`, {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    "Authorization": `O-Bearer ${token}`, // Or `${tokenType || "O-Bearer"} ${token}` if dynamic
+    "Authorization": `Bearer ${token}`, // Or `${tokenType || "O-Bearer"} ${token}` if dynamic
     "X-MERCHANT-ID": MERCHANT_ID,
   },
   body: JSON.stringify(payload),
