@@ -21,12 +21,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { merchantTransactionId, token } = req.query;
+    const { merchantTransactionId, token } = req.query; // Rename to merchantOrderId if needed
 
     if (!merchantTransactionId) {
       return res.status(400).json({
         success: false,
-        message: "Merchant Transaction ID is required",
+        message: "Merchant Order ID is required",
       });
     }
 
@@ -37,30 +37,27 @@ export default async function handler(req, res) {
       });
     }
 
-    const MERCHANT_ID = process.env.PHONEPE_MERCHANT_ID;
     const PHONEPE_API_URL = process.env.PHONEPE_API_URL;
 
     // Check payment status with PhonePe
-const response = await fetch(
-  `${PHONEPE_API_URL}/checkout/v2/order/${merchantTransactionId}/status`, // Corrected path (no MERCHANT_ID here)
-  {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `O-Bearer ${token}`, // Use O-Bearer
-      "X-MERCHANT-ID": MERCHANT_ID,
-    },
-  }
-);
-
+    const response = await fetch(
+      `${PHONEPE_API_URL}/checkout/v2/order/${merchantTransactionId}/status?details=true`, // Add query params if needed
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `O-Bearer ${token}`,
+        },
+      }
+    );
 
     const data = await response.json();
 
     return res.json({
-      success: data.success,
+      success: data.state === "COMPLETED", // Adjust based on actual response (e.g., state: "COMPLETED")
       code: data.code,
       message: data.message,
-      data: data.data,
+      data: data,
     });
   } catch (error) {
     console.error("Verification Error:", error);
@@ -70,4 +67,4 @@ const response = await fetch(
       error: error.message,
     });
   }
-}
+};
