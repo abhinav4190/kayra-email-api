@@ -4,6 +4,8 @@ const allowedOrigins = [
   "http://localhost:3000",
 ];
 
+const { adminDb } = require('../../lib/firebase-admin'); // Adjust path as needed
+
 export default async function handler(req, res) {
   const origin = req.headers.origin;
   if (allowedOrigins.includes(origin)) {
@@ -21,12 +23,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { merchantTransactionId, token } = req.query; // Rename to merchantOrderId if needed
+    const { orderId, merchantOrderId, token } = req.query;
 
-    if (!merchantTransactionId) {
+    if (!merchantOrderId) {
       return res.status(400).json({
         success: false,
         message: "Merchant Order ID is required",
+      });
+    }
+
+    if (!orderId) {
+      return res.status(400).json({
+        success: false,
+        message: "Order ID is required",
       });
     }
 
@@ -41,7 +50,7 @@ export default async function handler(req, res) {
 
     // Check payment status with PhonePe
     const response = await fetch(
-      `${PHONEPE_API_URL}/checkout/v2/order/${merchantTransactionId}/status?details=true`, // Add query params if needed
+      `${PHONEPE_API_URL}/checkout/v2/order/${merchantOrderId}/status?details=true`,
       {
         method: "GET",
         headers: {
@@ -53,8 +62,33 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
+    const isSuccess = data.state === "COMPLETED";
+
+    if (isSuccess) {
+      // Find and update the order in Firestore using admin SDK
+      const ordersRef = adminDb.collection("orders");
+      const q = ordersRef.where("orderId", "==", orderId);
+      const querySnapshot = await q.get();
+
+      if (querySnapshot.empty) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found.",
+        });
+      }
+
+      const orderDoc = querySnapshot.docs[0];
+      await orderDoc.ref.update({
+        paymentStatus: "completed",
+        orderStatus: "confirmed",
+        phonepeTransactionId: data.transactionId,
+        merchantOrderId: merchantOrderId,
+        paymentCompletedAt: new Date(),
+      });
+    }
+
     return res.json({
-      success: data.state === "COMPLETED", // Adjust based on actual response (e.g., state: "COMPLETED")
+      success: isSuccess,
       code: data.code,
       message: data.message,
       data: data,
