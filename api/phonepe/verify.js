@@ -42,7 +42,8 @@ export default async function handler(req, res) {
 
     // Check payment status with PhonePe
     const response = await fetch(
-      `${PHONEPE_API_URL}/v2/status/${MERCHANT_ID}/${merchantTransactionId}`,
+     `${PHONEPE_API_URL}/checkout/v2/status/${MERCHANT_ID}/${merchantTransactionId}`,
+
       {
         method: "GET",
         headers: {

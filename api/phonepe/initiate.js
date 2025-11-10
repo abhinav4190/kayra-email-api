@@ -52,7 +52,8 @@ export default async function handler(req, res) {
     };
 
     // Call PhonePe payment API with OAuth token
-    const response = await fetch(`${PHONEPE_API_URL}/v2/debit`, {
+const response = await fetch(`${PHONEPE_API_URL}/checkout/v2/pay`, {
+
       method: "POST",
       headers: {
         "Content-Type": "application/json",
