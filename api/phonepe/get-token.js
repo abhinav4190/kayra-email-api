@@ -73,22 +73,23 @@ const tokenResponse = await fetch(tokenUrl, {
 const tokenData = await tokenResponse.json();
 console.log("PhonePe response:", JSON.stringify(tokenData, null, 2));
 
-    if (tokenData.success && tokenData.data?.token) {
-      console.log("✓ Token obtained successfully");
-      return res.json({
-        success: true,
-        token: tokenData.data.token,
-        expiresIn: tokenData.data.expiresIn || 3600,
-      });
-    } else {
-      console.error("✗ Token request failed:", tokenData);
-      return res.status(400).json({
-        success: false,
-        message: tokenData.message || "Failed to get OAuth token",
-        code: tokenData.code,
-        details: tokenData,
-      });
-    }
+    if (tokenData.access_token) {
+  console.log("✓ Token obtained successfully");
+  return res.json({
+    success: true,
+    token: tokenData.access_token,
+    tokenType: tokenData.token_type,
+    expiresIn: tokenData.expires_in || 3600,
+  });
+} else {
+  console.error("✗ Token request failed:", tokenData);
+  return res.status(400).json({
+    success: false,
+    message: tokenData.message || "Failed to get OAuth token",
+    details: tokenData,
+  });
+}
+
   } catch (error) {
     console.error("Token Error:", error);
     return res.status(500).json({
