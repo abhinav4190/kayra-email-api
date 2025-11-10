@@ -1,0 +1,19 @@
+// api/test-simple.js
+
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  return res.status(200).json({ 
+    success: true, 
+    message: "Basic endpoint works",
+    env_check: {
+      hasProjectId: !!process.env.FIREBASE_PROJECT_ID,
+      hasClientEmail: !!process.env.FIREBASE_CLIENT_EMAIL,
+      hasPrivateKey: !!process.env.FIREBASE_PRIVATE_KEY,
+    }
+  });
+}
