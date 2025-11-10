@@ -21,56 +21,60 @@ export default async function handler(req, res) {
   }
 
   try {
-   const { orderId, amount, customerName, customerPhone, customerEmail, token, tokenType } = req.body; // Add tokenType if returning it
+    const { orderId, amount, customerName, customerPhone, customerEmail, token, tokenType } = req.body;
 
-   if (!token) {
-  return res.status(400).json({
-    success: false,
-    message: "OAuth token is required",
-  });
-}
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "OAuth token is required",
+      });
+    }
 
     const MERCHANT_ID = process.env.PHONEPE_MERCHANT_ID;
     const PHONEPE_API_URL = process.env.PHONEPE_API_URL;
     const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
-    const merchantTransactionId = `TXN_${orderId}_${Date.now()}`;
-    const merchantUserId = `USER_${customerPhone}`;
+    const merchantOrderId = `TXN_${orderId}_${Date.now()}`; // Use this as merchantOrderId (V2 naming)
 
     const payload = {
-      merchantId: MERCHANT_ID,
-      merchantTransactionId: merchantTransactionId,
-      merchantUserId: merchantUserId,
-      amount: amount * 100, // Convert to paise
-      redirectUrl: `${BASE_URL}/payment/callback?orderId=${orderId}&merchantTxnId=${merchantTransactionId}`,
-      redirectMode: "REDIRECT",
-      callbackUrl: `${BASE_URL}/payment/callback?orderId=${orderId}&merchantTxnId=${merchantTransactionId}`,
-      mobileNumber: customerPhone,
-      paymentInstrument: {
-        type: "PAY_PAGE",
+      merchantOrderId: merchantOrderId,
+      amount: amount * 100, // In paise
+      expireAfter: 1800, // Optional: 30 minutes expiry (in seconds)
+      metaInfo: { // Optional: Store customer info as UDFs
+        udf1: customerName,
+        udf2: customerPhone,
+        udf3: customerEmail,
+      },
+      paymentFlow: {
+        type: "PG_CHECKOUT",
+        message: "Payment for order", // Optional
+        merchantUrls: {
+          redirectUrl: `${BASE_URL}/payment/callback?orderId=${orderId}&merchantOrderId=${merchantOrderId}`,
+        },
+        // paymentModeConfig: { ... } // Optional: Add if you want to enable/disable specific instruments (e.g., UPI, cards)
       },
     };
 
     // Call PhonePe payment API with OAuth token
-const response = await fetch(`${PHONEPE_API_URL}/checkout/v2/pay`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": `O-Bearer ${token}`, // Or `${tokenType || "O-Bearer"} ${token}` if dynamic
-    "X-MERCHANT-ID": MERCHANT_ID,
-  },
-  body: JSON.stringify(payload),
-});
+    const response = await fetch(`${PHONEPE_API_URL}/checkout/v2/pay`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `O-Bearer ${token}`, // Use O-Bearer as per docs
+      },
+      body: JSON.stringify(payload),
+    });
 
     const data = await response.json();
 
-    if (data.success && data.data?.instrumentResponse?.redirectInfo?.url) {
+    if (response.ok && data.redirectUrl) { // V2 success check
       return res.json({
         success: true,
-        data: data.data,
-        merchantTransactionId,
+        data,
+        merchantOrderId, // Return for client-side use
       });
     } else {
+      console.error("PhonePe response:", data);
       return res.status(400).json({
         success: false,
         message: data.message || "Payment initiation failed",
@@ -84,4 +88,4 @@ const response = await fetch(`${PHONEPE_API_URL}/checkout/v2/pay`, {
       error: error.message,
     });
   }
-}
+};
