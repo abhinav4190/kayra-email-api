@@ -44,32 +44,34 @@ export default async function handler(req, res) {
       });
     }
 
-    const tokenUrl = `${PHONEPE_API_URL}/v1/oauth/token`;
+const tokenUrl = `${PHONEPE_API_URL}/v1/oauth/token`;
+
     console.log("Token URL:", tokenUrl);
 
-    const requestBody = {
-      clientId: CLIENT_ID,
-      clientSecret: CLIENT_SECRET,
-    };
+ const requestBody = new URLSearchParams({
+  grant_type: "client_credentials",
+  client_id: CLIENT_ID,
+  client_secret: CLIENT_SECRET,
+});
 
-    console.log("Request body (sanitized):", {
-      clientId: CLIENT_ID,
-      clientSecret: CLIENT_SECRET.substring(0, 5) + "...",
-    });
+console.log("Request body (sanitized):", {
+  client_id: CLIENT_ID,
+  client_secret: CLIENT_SECRET.substring(0, 5) + "...",
+});
 
     // Get OAuth token
-    const tokenResponse = await fetch(tokenUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestBody),
-    });
+const tokenResponse = await fetch(tokenUrl, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded",
+  },
+  body: requestBody.toString(),
+});
+
 
     console.log("Response status:", tokenResponse.status);
-    
-    const tokenData = await tokenResponse.json();
-    console.log("PhonePe response:", JSON.stringify(tokenData, null, 2));
+const tokenData = await tokenResponse.json();
+console.log("PhonePe response:", JSON.stringify(tokenData, null, 2));
 
     if (tokenData.success && tokenData.data?.token) {
       console.log("✓ Token obtained successfully");
