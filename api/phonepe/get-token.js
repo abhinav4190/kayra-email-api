@@ -48,11 +48,11 @@ const tokenUrl = `${PHONEPE_API_URL}/v1/oauth/token`;
 
     console.log("Token URL:", tokenUrl);
 
- const requestBody = new URLSearchParams({
+const requestBody = {
   grant_type: "client_credentials",
   client_id: CLIENT_ID,
   client_secret: CLIENT_SECRET,
-});
+};
 
 console.log("Request body (sanitized):", {
   client_id: CLIENT_ID,
@@ -63,11 +63,12 @@ console.log("Request body (sanitized):", {
 const tokenResponse = await fetch(tokenUrl, {
   method: "POST",
   headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
+    "Content-Type": "application/json",
+    "X-CLIENT-VERSION": "v1",
   },
-  body: requestBody.toString(),
+  body: JSON.stringify(requestBody),
 });
-
+console.log(await tokenResponse.text());
 
     console.log("Response status:", tokenResponse.status);
 const tokenData = await tokenResponse.json();
